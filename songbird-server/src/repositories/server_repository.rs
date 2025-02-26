@@ -1,8 +1,9 @@
-use sqlx::{Pool, Postgres};
-use chrono::{DateTime, Utc};
-use crate::models::models::{Server, NewServer, ServerWithMembersResponse, UserResponse};
+use crate::models::models::{NewServer, Server, ServerWithMembersResponse, UserResponse};
 use crate::repositories::UserRepository;
+use chrono::{DateTime, Utc};
+use sqlx::{Pool, Postgres};
 
+#[derive(Clone)]
 pub struct ServerRepository {
     pool: Pool<Postgres>,
     user_repository: UserRepository,
@@ -10,7 +11,10 @@ pub struct ServerRepository {
 
 impl ServerRepository {
     pub fn new(pool: Pool<Postgres>, user_repository: UserRepository) -> Self {
-        Self { pool, user_repository }
+        Self {
+            pool,
+            user_repository,
+        }
     }
 
     pub async fn create(&self, new_server: NewServer) -> Result<Server, sqlx::Error> {
@@ -33,7 +37,9 @@ impl ServerRepository {
             owner_user_id: record.owner_user_id,
             icon_url: record.icon_url,
             created_at: DateTime::from_naive_utc_and_offset(record.created_at, Utc),
-            updated_at: record.updated_at.map(|dt| DateTime::from_naive_utc_and_offset(dt, Utc))
+            updated_at: record
+                .updated_at
+                .map(|dt| DateTime::from_naive_utc_and_offset(dt, Utc)),
         };
 
         Ok(server)
@@ -57,7 +63,9 @@ impl ServerRepository {
             owner_user_id: r.owner_user_id,
             icon_url: r.icon_url,
             created_at: DateTime::from_naive_utc_and_offset(r.created_at, Utc),
-            updated_at: r.updated_at.map(|dt| DateTime::from_naive_utc_and_offset(dt, Utc))
+            updated_at: r
+                .updated_at
+                .map(|dt| DateTime::from_naive_utc_and_offset(dt, Utc)),
         });
 
         Ok(server)
@@ -83,7 +91,9 @@ impl ServerRepository {
                 owner_user_id: r.owner_user_id,
                 icon_url: r.icon_url,
                 created_at: DateTime::from_naive_utc_and_offset(r.created_at, Utc),
-                updated_at: r.updated_at.map(|dt| DateTime::from_naive_utc_and_offset(dt, Utc))
+                updated_at: r
+                    .updated_at
+                    .map(|dt| DateTime::from_naive_utc_and_offset(dt, Utc)),
             })
             .collect();
 
@@ -108,7 +118,9 @@ impl ServerRepository {
                 owner_user_id: r.owner_user_id,
                 icon_url: r.icon_url,
                 created_at: DateTime::from_naive_utc_and_offset(r.created_at, Utc),
-                updated_at: r.updated_at.map(|dt| DateTime::from_naive_utc_and_offset(dt, Utc))
+                updated_at: r
+                    .updated_at
+                    .map(|dt| DateTime::from_naive_utc_and_offset(dt, Utc)),
             })
             .collect();
 
@@ -136,7 +148,9 @@ impl ServerRepository {
                 owner_user_id: r.owner_user_id,
                 icon_url: r.icon_url,
                 created_at: DateTime::from_naive_utc_and_offset(r.created_at, Utc),
-                updated_at: r.updated_at.map(|dt| DateTime::from_naive_utc_and_offset(dt, Utc))
+                updated_at: r
+                    .updated_at
+                    .map(|dt| DateTime::from_naive_utc_and_offset(dt, Utc)),
             })
             .collect();
 
@@ -167,7 +181,9 @@ impl ServerRepository {
             owner_user_id: record.owner_user_id,
             icon_url: record.icon_url,
             created_at: DateTime::from_naive_utc_and_offset(record.created_at, Utc),
-            updated_at: record.updated_at.map(|dt| DateTime::from_naive_utc_and_offset(dt, Utc))
+            updated_at: record
+                .updated_at
+                .map(|dt| DateTime::from_naive_utc_and_offset(dt, Utc)),
         };
 
         Ok(updated_server)
@@ -187,7 +203,10 @@ impl ServerRepository {
         Ok(result.rows_affected() > 0)
     }
 
-    pub async fn get_server_members(&self, server_id: i32) -> Result<Vec<UserResponse>, sqlx::Error> {
+    pub async fn get_server_members(
+        &self,
+        server_id: i32,
+    ) -> Result<Vec<UserResponse>, sqlx::Error> {
         let user_records = sqlx::query!(
             r#"
             SELECT u.user_id, u.username, u.email, u.avatar_url, u.created_at, u.status
@@ -215,15 +234,15 @@ impl ServerRepository {
         Ok(members)
     }
 
-    pub async fn get_server_with_members(&self, server_id: i32) -> Result<Option<ServerWithMembersResponse>, sqlx::Error> {
+    pub async fn get_server_with_members(
+        &self,
+        server_id: i32,
+    ) -> Result<Option<ServerWithMembersResponse>, sqlx::Error> {
         let server = self.find_by_id(server_id).await?;
-        
+
         if let Some(server) = server {
             let members = self.get_server_members(server_id).await?;
-            Ok(Some(ServerWithMembersResponse {
-                server,
-                members,
-            }))
+            Ok(Some(ServerWithMembersResponse { server, members }))
         } else {
             Ok(None)
         }

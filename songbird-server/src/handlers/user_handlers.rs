@@ -1,4 +1,13 @@
 // src/handlers/user_handlers.rs
+use crate::models::{
+    response_types::UserResponse,
+    user::{NewUser, User},
+};
+use crate::repositories::UserRepository;
+use argon2::{
+    password_hash::{rand_core::OsRng, PasswordHasher, SaltString},
+    Argon2,
+};
 use axum::{
     extract::{Path, State},
     http::StatusCode,
@@ -6,15 +15,7 @@ use axum::{
     Json,
 };
 use serde::{Deserialize, Serialize};
-use crate::{models::models::{NewUser, User, UserResponse}, repositories::UserRepository};
 use sqlx::{Pool, Postgres};
-use argon2::{
-    password_hash::{
-        rand_core::OsRng,
-        SaltString, PasswordHasher,
-    },
-    Argon2,
-};
 
 #[derive(Clone)]
 pub struct AppState {
@@ -195,15 +196,15 @@ pub async fn update_user(
 
     // Update the user fields
     let mut updated_user = current_user;
-    
+
     if let Some(username) = payload.username {
         updated_user.username = username;
     }
-    
+
     if let Some(email) = payload.email {
         updated_user.email = email;
     }
-    
+
     if let Some(password) = payload.password {
         // Hash the new password
         let salt = SaltString::generate(&mut OsRng);
@@ -222,11 +223,11 @@ pub async fn update_user(
             }
         };
     }
-    
+
     if let Some(avatar_url) = payload.avatar_url {
         updated_user.avatar_url = Some(avatar_url);
     }
-    
+
     if let Some(status) = payload.status {
         updated_user.status = status;
     }
@@ -309,9 +310,8 @@ pub async fn delete_user(
     }
 }
 
-pub async fn get_all_users(
-    State(state): State<AppState>,
-) -> impl IntoResponse {
+pub async fn get_all_users(State(state): State<AppState>) -> impl IntoResponse {
+    tracing::info!("getting users...");
     match state.user_repository.find_all().await {
         Ok(users) => {
             let user_responses: Vec<UserResponse> = users
