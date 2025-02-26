@@ -1,20 +1,15 @@
 use crate::models::models::{NewServer, Server, ServerWithMembersResponse, UserResponse};
-use crate::repositories::UserRepository;
 use chrono::{DateTime, Utc};
 use sqlx::{Pool, Postgres};
 
 #[derive(Clone)]
 pub struct ServerRepository {
     pool: Pool<Postgres>,
-    user_repository: UserRepository,
 }
 
 impl ServerRepository {
-    pub fn new(pool: Pool<Postgres>, user_repository: UserRepository) -> Self {
-        Self {
-            pool,
-            user_repository,
-        }
+    pub fn new(pool: Pool<Postgres>) -> Self {
+        Self { pool }
     }
 
     pub async fn create(&self, new_server: NewServer) -> Result<Server, sqlx::Error> {

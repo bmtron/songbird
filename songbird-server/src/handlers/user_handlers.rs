@@ -4,6 +4,7 @@ use crate::models::{
     user::{NewUser, User},
 };
 use crate::repositories::UserRepository;
+use crate::router::AppState;
 use argon2::{
     password_hash::{rand_core::OsRng, PasswordHasher, SaltString},
     Argon2,
@@ -16,14 +17,7 @@ use axum::{
 };
 use serde::{Deserialize, Serialize};
 use sqlx::{Pool, Postgres};
-
-#[derive(Clone)]
-pub struct AppState {
-    pub pool: Pool<Postgres>,
-    pub user_repository: UserRepository,
-}
-
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct CreateUserRequest {
     pub username: String,
     pub email: String,
@@ -31,7 +25,7 @@ pub struct CreateUserRequest {
     pub avatar_url: Option<String>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct UpdateUserRequest {
     pub username: Option<String>,
     pub email: Option<String>,
