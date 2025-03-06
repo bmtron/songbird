@@ -1,6 +1,9 @@
 // src/router.rs
 use crate::handlers::{
-    server_handlers::{create_server, delete_server, get_all_servers, get_server, update_server},
+    server_handlers::{
+        create_server, delete_server, get_all_servers, get_server, get_servers_by_owner,
+        update_server,
+    },
     user_handlers::{create_user, delete_user, get_all_users, get_user, update_user},
 };
 use axum::{
@@ -32,6 +35,7 @@ pub fn create_router(app_state: AppState) -> Router {
         .route("/api/servers/{server_id}", get(get_server))
         .route("/api/servers/{server_id}", put(update_server))
         .route("/api/servers/{server_id}", delete(delete_server))
+        .route("/api/servers/{owner_user_id}", get(get_servers_by_owner))
         // Commented out routes for server members until they are implemented
         // .route("/api/servers/:server_id/members", get(get_server_members))
         // .route("/api/servers/:server_id/members", post(add_server_member))
