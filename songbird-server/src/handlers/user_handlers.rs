@@ -1,9 +1,8 @@
 // src/handlers/user_handlers.rs
 use crate::models::{
     response_types::UserResponse,
-    user::{NewUser, User},
+    user::NewUser,
 };
-use crate::repositories::UserRepository;
 use crate::router::AppState;
 use argon2::{
     password_hash::{rand_core::OsRng, PasswordHasher, SaltString},
@@ -16,7 +15,6 @@ use axum::{
     Json,
 };
 use serde::{Deserialize, Serialize};
-use sqlx::{Pool, Postgres};
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CreateUserRequest {
     pub username: String,
@@ -45,6 +43,7 @@ pub async fn create_user(
     State(state): State<AppState>,
     Json(payload): Json<CreateUserRequest>,
 ) -> impl IntoResponse {
+    tracing::info!("Creating user...");
     // Hash the password
     let salt = SaltString::generate(&mut OsRng);
     let argon2 = Argon2::default();
@@ -119,6 +118,7 @@ pub async fn get_user(
     State(state): State<AppState>,
     Path(user_id): Path<i32>,
 ) -> impl IntoResponse {
+    tracing::info!("Getting user...");
     match state.user_repository.find_by_id(user_id).await {
         Ok(Some(user)) => {
             let user_response = UserResponse {
@@ -163,6 +163,8 @@ pub async fn update_user(
     Path(user_id): Path<i32>,
     Json(payload): Json<UpdateUserRequest>,
 ) -> impl IntoResponse {
+    tracing::info!("Updating user...");
+
     // First, get the current user
     let current_user = match state.user_repository.find_by_id(user_id).await {
         Ok(Some(user)) => user,
@@ -276,6 +278,8 @@ pub async fn delete_user(
     State(state): State<AppState>,
     Path(user_id): Path<i32>,
 ) -> impl IntoResponse {
+    tracing::info!("Deleting user...");
+
     match state.user_repository.delete(user_id).await {
         Ok(true) => (
             StatusCode::OK,
@@ -305,7 +309,7 @@ pub async fn delete_user(
 }
 
 pub async fn get_all_users(State(state): State<AppState>) -> impl IntoResponse {
-    tracing::info!("getting users...");
+    tracing::info!("Getting all users...");
     match state.user_repository.find_all().await {
         Ok(users) => {
             let user_responses: Vec<UserResponse> = users

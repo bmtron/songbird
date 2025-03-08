@@ -1,14 +1,22 @@
 #include "mainwindow.h"
 #include "constants.h"
-#include "loginscreen.h"
 #include <QApplication>
+#include <QStyleFactory>
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
+
+    // Apply a modern style
+    a.setStyle(QStyleFactory::create("Fusion"));
+
+    // Set application properties
+    a.setApplicationName(Constants::PROJECT_NAME);
+    a.setApplicationVersion(Constants::VERSION);
+
+    // Create and show the main window
     MainWindow w;
-    w.setWindowTitle(Constants::PROJECT_NAME);
-    LoginScreen log(&w);
-    log.show();
+    w.show();
+
     return a.exec();
 }

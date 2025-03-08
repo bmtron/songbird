@@ -7,5 +7,6 @@
 namespace Constants {
 const QString PROJECT_NAME = "Songbird";
 const QString VERSION = "0.0.1";
+const int PASSWORD_MIN_LEN = 8;
 }
 #endif // CONSTANTS_H

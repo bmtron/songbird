@@ -24,7 +24,7 @@ pub struct AppState {
 pub fn create_router(app_state: AppState) -> Router {
     Router::new()
         // User routes
-        .route("/api/users", post(create_user))
+        .route("/api/users/create", post(create_user))
         .route("/api/users", get(get_all_users))
         .route("/api/users/{user_id}", get(get_user))
         .route("/api/users/{user_id}", put(update_user))
@@ -35,7 +35,7 @@ pub fn create_router(app_state: AppState) -> Router {
         .route("/api/servers/{server_id}", get(get_server))
         .route("/api/servers/{server_id}", put(update_server))
         .route("/api/servers/{server_id}", delete(delete_server))
-        .route("/api/servers/{owner_user_id}", get(get_servers_by_owner))
+        .route("/api/servers/owner/{owner_user_id}", get(get_servers_by_owner))
         // Commented out routes for server members until they are implemented
         // .route("/api/servers/:server_id/members", get(get_server_members))
         // .route("/api/servers/:server_id/members", post(add_server_member))

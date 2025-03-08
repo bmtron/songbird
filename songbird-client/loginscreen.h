@@ -1,35 +1,40 @@
 #ifndef LOGINSCREEN_H
 #define LOGINSCREEN_H
 
-#include <QDialog>
+#include <QWidget>
 #include <QLabel>
 #include <QLineEdit>
 #include <QPushButton>
 #include <QCheckBox>
 #include <QGridLayout>
 #include <QMessageBox>
+#include "user.h"
 
-
-
-class LoginScreen : public QDialog
+class LoginScreen : public QWidget
 {
+    Q_OBJECT
+
 public:
-    LoginScreen(QWidget *parent = nullptr);
+    explicit LoginScreen(QWidget *parent = nullptr);
+
+signals:
+    void loginSuccessful(User user);
+    void registerRequested();
+
 private slots:
     void onLoginClicked();
     void onForgotPasswordClicked();
     void onRegisterClicked();
+
 private:
     void saveCredentials(const QString &username);
-    QWidget *parent;
+
     QLineEdit *m_usernameEdit;
     QLineEdit *m_passwordEdit;
     QCheckBox *m_rememberCheckBox;
     QPushButton *m_loginButton;
-    QPushButton *m_cancelButton;
     QPushButton *m_registerButton;
     QLabel *m_forgotPasswordLabel;
 };
-
 
 #endif // LOGINSCREEN_H
