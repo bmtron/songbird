@@ -7,9 +7,10 @@ class User
 {
 public:
     User();
-    void setPassword(QString password);
-    void setUsername(QString username);
-    void setEmail(QString email);
+    User(QString& username, QString& password);
+    void setPassword(QString& password);
+    void setUsername(QString& username);
+    void setEmail(QString& email);
     QString password;
     QString username;
     QString email;

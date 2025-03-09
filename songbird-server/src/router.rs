@@ -4,7 +4,7 @@ use crate::handlers::{
         create_server, delete_server, get_all_servers, get_server, get_servers_by_owner,
         update_server,
     },
-    user_handlers::{create_user, delete_user, get_all_users, get_user, update_user},
+    user_handlers::{create_user, login_attempt, delete_user, get_all_users, get_user, get_user_by_username, update_user},
 };
 use axum::{
     routing::{delete, get, post, put},
@@ -23,10 +23,13 @@ pub struct AppState {
 
 pub fn create_router(app_state: AppState) -> Router {
     Router::new()
+        // Login Route
+        .route("/api/login", post(login_attempt))
         // User routes
         .route("/api/users/create", post(create_user))
         .route("/api/users", get(get_all_users))
         .route("/api/users/{user_id}", get(get_user))
+        .route("/api/users/by_username/{username}", get(get_user_by_username))
         .route("/api/users/{user_id}", put(update_user))
         .route("/api/users/{user_id}", delete(delete_user))
         // Server routes

@@ -3,7 +3,9 @@ use crate::models::{
     response_types::UserResponse,
     user::NewUser,
 };
+use crate::repositories::user_repository;
 use crate::router::AppState;
+use argon2::{PasswordHash, PasswordVerifier};
 use argon2::{
     password_hash::{rand_core::OsRng, PasswordHasher, SaltString},
     Argon2,
@@ -32,11 +34,93 @@ pub struct UpdateUserRequest {
     pub status: Option<String>,
 }
 
+#[derive(Debug, Deserialize)]
+pub struct UserLoginRequest {
+    pub username: String,
+    pub password: String,
+}
+
 #[derive(Debug, Serialize)]
 pub struct ApiResponse<T> {
     pub success: bool,
     pub data: Option<T>,
     pub error: Option<String>,
+}
+
+pub async fn login_attempt(
+    State(state): State<AppState>,
+    Json(payload): Json<UserLoginRequest>,
+) -> impl IntoResponse {
+    tracing::info!("Login attempt for user {}", &payload.username);
+    let argon2 = Argon2::default();
+    let (user_response, password_hash) = match state.user_repository.find_by_username(&payload.username).await {
+        Ok(Some(user)) => {
+            let user_response = UserResponse {
+                user_id: user.user_id,
+                username: user.username,
+                email: user.email,
+                avatar_url: user.avatar_url,
+                status: user.status,
+                created_at: user.created_at,
+            };
+            (user_response, user.password_hash)
+        }
+        Ok(None) => {
+            return (
+                StatusCode::NOT_FOUND,
+                Json(ApiResponse {
+                    success: false,
+                    data: None::<UserResponse>,
+                    error: Some("User not found".to_string()),
+                }),
+            )
+        }
+        Err(_) => {
+            return (
+                StatusCode::NOT_FOUND,
+                Json(ApiResponse {
+                    success: false,
+                    data: None::<UserResponse>,
+                    error: Some("User not found".to_string()),
+                }),
+            )
+        }
+    };
+
+    let parsed_hash = match PasswordHash::new(password_hash.as_str()) {
+        Ok(hash) => hash,
+        Err(_) => return ( // Invalid hash format
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(ApiResponse {
+                success: false,
+                data: None::<UserResponse>,
+                error: Some("Error parsing passowrd hash.".to_string()),
+            }),
+        ), 
+    };
+    
+    match argon2.verify_password(payload.password.as_bytes(), &parsed_hash) {
+        Ok(()) => {
+            (
+                StatusCode::OK,
+                Json(ApiResponse {
+                    success: true,
+                    data: Some(user_response),
+                    error: None,
+                }),
+            )
+        }
+        Err(_) => {
+            (
+                StatusCode::OK,
+                Json(ApiResponse {
+                    success: false,
+                    data: None,
+                    error: Some("Username or password incorrect.".to_string()),
+                }),
+            )
+        }
+    }
 }
 
 pub async fn create_user(
@@ -113,7 +197,49 @@ pub async fn create_user(
         }
     }
 }
+pub async fn get_user_by_username(
+    State(state): State<AppState>,
+    Path(username): Path<String>,
+) -> impl IntoResponse {
+    tracing::info!("Getting user by username...");
+    match state.user_repository.find_by_username(username.as_str()).await {
+        Ok(Some(user)) => {
+            let user_response = UserResponse {
+                user_id: user.user_id,
+                username: user.username,
+                email: user.email,
+                avatar_url: user.avatar_url,
+                status: user.status,
+                created_at: user.created_at,
+            };
 
+            (
+                StatusCode::OK,
+                Json(ApiResponse {
+                    success: true,
+                    data: Some(user_response),
+                    error: None,
+                }),
+            )
+        }
+        Ok(None) => (
+            StatusCode::NOT_FOUND,
+            Json(ApiResponse {
+                success: false,
+                data: None::<UserResponse>,
+                error: Some("User not found".to_string()),
+            }),
+        ),
+        Err(_) => (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(ApiResponse {
+                success: false,
+                data: None::<UserResponse>,
+                error: Some("Failed to fetch user".to_string()),
+            }),
+        ),
+    } 
+}
 pub async fn get_user(
     State(state): State<AppState>,
     Path(user_id): Path<i32>,

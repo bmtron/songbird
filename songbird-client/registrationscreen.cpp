@@ -173,10 +173,13 @@ void RegistrationScreen::onRegisterClicked()
 
     // Create a user object
     User newUser;
+    QString usernameText = m_usernameEdit->text();
+    QString emailText = m_emailEdit->text();
+    QString passwordText = m_passwordEdit->text();
     // Set user properties (assuming User class has these methods)
-    newUser.setUsername(m_usernameEdit->text());
-    newUser.setEmail(m_emailEdit->text());
-    newUser.setPassword(m_passwordEdit->text());
+    newUser.setUsername(usernameText);
+    newUser.setEmail(emailText);
+    newUser.setPassword(passwordText);
 
     // Submit user
     submitNewUser(newUser);

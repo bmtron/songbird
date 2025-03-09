@@ -18,17 +18,19 @@ public:
     explicit LoginScreen(QWidget *parent = nullptr);
 
 signals:
-    void loginSuccessful(User user);
+    void loginSuccessful(User& user);
     void registerRequested();
 
 private slots:
     void onLoginClicked();
     void onForgotPasswordClicked();
     void onRegisterClicked();
+    void onLoginSuccess(const QJsonObject& responseData, const User& user);
+    void onLoginFailure(const QString& errorMessage);
 
 private:
     void saveCredentials(const QString &username);
-
+    void setupConnections();
     QLineEdit *m_usernameEdit;
     QLineEdit *m_passwordEdit;
     QCheckBox *m_rememberCheckBox;

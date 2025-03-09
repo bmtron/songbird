@@ -1,5 +1,6 @@
 #include "loginscreen.h"
 #include "constants.h"
+#include "networkmanager.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QFrame>
@@ -7,6 +8,7 @@
 LoginScreen::LoginScreen(QWidget *parent)
     : QWidget(parent)
 {
+    this->setupConnections();
     // Set up main layout
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
     mainLayout->setSpacing(20);
@@ -116,6 +118,28 @@ LoginScreen::LoginScreen(QWidget *parent)
     // Set initial focus
     m_usernameEdit->setFocus();
 }
+void LoginScreen::setupConnections() {
+
+    qDebug() << "SETTING UP CONNECTIONS";
+    connect(&NetworkManager::instance(), &NetworkManager::loginSuccess,
+            this, &LoginScreen::onLoginSuccess);
+    connect(&NetworkManager::instance(), &NetworkManager::loginFailure,
+            this, &LoginScreen::onLoginFailure);
+}
+
+void LoginScreen::onLoginSuccess(const QJsonObject& responseData, const User& user) {
+    // Handle successful login
+    // QString token = responseData["token"].toString();
+    // Store token, update UI, navigate to main screen, etc.
+    User u = user;
+    qDebug() << "LOGIN_SUCCESS. SIGNAL_EMIT";
+    emit loginSuccessful(u);
+}
+
+void LoginScreen::onLoginFailure(const QString& errorMessage) {
+    QMessageBox::critical(this, "Login Error", "Login failed. Username or password is incorrect.");
+    qDebug() << "Login Failure..." << errorMessage;
+}
 
 void LoginScreen::onLoginClicked()
 {
@@ -127,22 +151,23 @@ void LoginScreen::onLoginClicked()
         return;
     }
 
-    // Simple hardcoded authentication for demonstration
-    // In a real app, you would connect to your backend
-    if (username == "admin" && password == "password") {
-        if (m_rememberCheckBox->isChecked()) {
-            saveCredentials(username);
-        }
+    User user(username, password);
+    NetworkManager::instance().login(user);
 
-        // Create a user object and emit login successful signal
-        User user;
-        // Set user properties (assuming User class has these methods)
-        // user.setUsername(username);
+    // if (username == "admin" && password == "password") {
+    //     if (m_rememberCheckBox->isChecked()) {
+    //         saveCredentials(username);
+    //     }
 
-        emit loginSuccessful(user);
-    } else {
-        QMessageBox::critical(this, "Login Failed", "Invalid username or password");
-    }
+    //     // Create a user object and emit login successful signal
+    //     User user;
+    //     // Set user properties (assuming User class has these methods)
+    //     // user.setUsername(username);
+
+    //     emit loginSuccessful(user);
+    // } else {
+    //     QMessageBox::critical(this, "Login Failed", "Invalid username or password");
+    // }
 }
 
 void LoginScreen::onForgotPasswordClicked()
